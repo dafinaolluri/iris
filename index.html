@@ -1,149 +1,184 @@
-<script
-  src="https://code.jquery.com/jquery-3.3.1.min.js"
-  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
-  crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-csv/0.71/jquery.csv-0.71.min.js"></script>
+<html>
+    <head>
+        <script
+          src="https://code.jquery.com/jquery-3.3.1.min.js"
+          integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+          crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-csv/0.71/jquery.csv-0.71.min.js"></script>
 
-<script src="https://code.highcharts.com/highcharts.js"></script>
-<script src="https://code.highcharts.com/modules/exporting.js"></script>
+        <script src="https://code.highcharts.com/highcharts.js"></script>
+        <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    </head>
+
+    <body>
+        <div id="container-sepal" style="min-width: 310px; height: 400px; max-width: 800px; margin: 0 auto;"></div>
+
+        <div id="container-petal" style="min-width: 310px; height: 400px; max-width: 800px; margin: 0 auto; padding-top: 100px;"></div>
+
+        <div id="container-lengths" style="min-width: 310px; height: 400px; max-width: 800px; margin: 0 auto; padding-top: 100px;"></div>
+
+        <div id="container-widths" style="min-width: 310px; height: 400px; max-width: 800px; margin: 0 auto; padding-top: 100px;"></div>
 
 
+        <script>
+            $.ajax({
+               type: "GET",  
+               url: "iris.data",
+               dataType: "text",       
+               success: function(response)  
+               {
 
-<div id="container-sepal" style="min-width: 310px; height: 400px; max-width: 800px; margin: 0 auto; padding-bottom:100px;"></div>
+                    var setosaSepal = [];
+                    var setosaPetal = [];
+                    var setosaLengths = [];
+                    var setosaWidths = [];
 
-<div id="container-petal" style="min-width: 310px; height: 400px; max-width: 800px; margin: 0 auto"></div>
+                    var versicolorSepal = [];
+                    var versicolorPetal = [];
+                    var versicolorLengths = [];
+                    var versicolorWidths = [];
+
+                    var virginicaSepal = [];
+                    var virginicaPetal = [];
+                    var virginicaLengths = [];
+                    var virginicaWidths = [];
 
 
-<script>
+                    data = $.csv.toArrays(response);
 
-    $.ajax({
-       type: "GET",  
-       url: "iris.data",
-       dataType: "text",       
-       success: function(response)  
-       {
+                    for(var i=0; i < data.length; i++){
 
-            var setosaSepal = [];
-            var setosaPetal = [];
+                        var sepalLength = parseFloat(data[i][0]);
+                        var sepalWidth = parseFloat(data[i][1]);
+                        var sepalPair = [sepalLength, sepalWidth];
 
-            var versicolorSepal = [];
-            var versicolorPetal = [];
+                        var petalLength = parseFloat(data[i][2]);
+                        var petalWidth = parseFloat(data[i][3]);
+                        var petalPair = [petalLength, petalWidth];
 
-            var virginicaSepal = [];
-            var virginicaPetal = [];
+                        var lengthPair = [sepalLength, petalLength];
+                        var widthPair = [sepalWidth, petalWidth];
 
-            data = $.csv.toArrays(response);
+                        if(data[i][4] === "Iris-setosa"){
+                            setosaSepal.push(sepalPair);
+                            setosaPetal.push(petalPair);
+                            setosaLengths.push(lengthPair);
+                            setosaWidths.push(widthPair);
 
-            for(var i=0; i < data.length; i++){
+                        }else if(data[i][4] === "Iris-versicolor"){
+                            versicolorSepal.push(sepalPair);
+                            versicolorPetal.push(petalPair);
+                            versicolorLengths.push(lengthPair);
+                            versicolorWidths.push(widthPair);
 
-                var sepalLength = parseFloat(data[i][0]);
-                var sepalWidth = parseFloat(data[i][1]);
-                var sepalPair = [sepalLength, sepalWidth];
-
-                var petalLength = parseFloat(data[i][2]);
-                var petalWidth = parseFloat(data[i][3]);
-                var petalPair = [petalLength, petalWidth];
-
-                console.log(data[4]);
-                if(data[i][4] === "Iris-setosa"){
-                    setosaSepal.push(sepalPair);
-                    setosaPetal.push(petalPair);
-
-                }else if(data[i][4] === "Iris-versicolor"){
-                    versicolorSepal.push(sepalPair);
-                    versicolorPetal.push(petalPair);
-
-                }else if(data[i][4] === "Iris-virginica"){
-                    virginicaSepal.push(sepalPair);
-                    virginicaPetal.push(petalPair);  
-                }
-            }
-
-            renderScatterPlot("Sepal", "container-sepal", setosaSepal, versicolorSepal, virginicaSepal);
-
-            renderScatterPlot("Petal", "container-petal", setosaPetal, versicolorPetal, virginicaPetal);
-       }   
-    });
-
-    function renderScatterPlot(sepalOrPetal, containerId, setosaData, versicolorData, virginicaData){
-
-        var title = sepalOrPetal + " Length Versus Width of 50 Iris Plants Set by Class";
-
-        Highcharts.chart(containerId, {
-            chart: {
-                type: 'scatter',
-                zoomType: 'xy'
-            },
-            title: {
-                text: title
-            },
-            subtitle: {
-                text: 'Source: R.A. Fisher'
-            },
-            xAxis: {
-                title: {
-                    enabled: true,
-                    text: 'Length (cm)'
-                },
-                startOnTick: true,
-                endOnTick: true,
-                showLastLabel: true
-            },
-            yAxis: {
-                title: {
-                    text: 'Width (cm)'
-                }
-            },
-            legend: {
-                layout: 'vertical',
-                align: 'left',
-                verticalAlign: 'top',
-                x: 100,
-                y: 70,
-                floating: true,
-                backgroundColor: (Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF',
-                borderWidth: 1
-            },
-            plotOptions: {
-                scatter: {
-                    marker: {
-                        radius: 5,
-                        states: {
-                            hover: {
-                                enabled: true,
-                                lineColor: 'rgb(100,100,100)'
-                            }
+                        }else if(data[i][4] === "Iris-virginica"){
+                            virginicaSepal.push(sepalPair);
+                            virginicaPetal.push(petalPair);
+                            virginicaLengths.push(lengthPair);
+                            virginicaWidths.push(widthPair); 
                         }
-                    },
-                    states: {
-                        hover: {
-                            marker: {
-                                enabled: false
-                            }
-                        }
-                    },
-                    tooltip: {
-                        headerFormat: '<b>{series.name}</b><br>',
-                        pointFormat: 'Length: {point.x} cm<br>Width: {point.y} cm'
                     }
-                }
-            },
-            series: [{
-                name: 'Iris Setosa',
-                color: 'rgba(223, 83, 83, .5)',
-                data: setosaData
-            }, {
-                name: 'Iris Versicolor',
-                color: 'rgba(119, 152, 191, .5)',
-                data: versicolorData
-            }, {
-                name: 'Iris Virginica',
-                color: 'rgba(76, 220, 150, .5)',
-                data: virginicaData
-            }]
-        });
-    }
 
+                    renderScatterPlot("Sepal Length Versus Sepal Width of 50 Iris Plants Set by Class",
+                        "Sepal Length (cm)",
+                        "Sepal Width (cm)",
+                        "container-sepal",
+                        setosaSepal, versicolorSepal, virginicaSepal);
 
+                    renderScatterPlot("Petal Length Versus Petal Width of 50 Iris Plants Set by Class",
+                        "Petal Length (cm)",
+                        "Petal Width (cm)",
+                        "container-petal",
+                        setosaPetal, versicolorPetal, virginicaPetal);
 
-</script>
+                    renderScatterPlot("Sepal Length Versus Petal Length of 50 Iris Plants Set by Class",
+                        "Sepal Length (cm)",
+                        "Petal Length (cm)",
+                        "container-lengths", setosaLengths, versicolorLengths, virginicaLengths);
+
+                    renderScatterPlot("Sepal Width Versus Petal Width of 50 Iris Plants Set by Class",
+                        "Sepal Width (cm)",
+                        "Petal Width (cm)",
+                        "container-widths", setosaWidths, versicolorWidths, virginicaWidths);
+               }   
+            });
+
+            function renderScatterPlot(title, xLabel, yLabel, containerId, setosaData, versicolorData, virginicaData){
+
+                Highcharts.chart(containerId, {
+                    chart: {
+                        type: 'scatter',
+                        zoomType: 'xy'
+                    },
+                    title: {
+                        text: title
+                    },
+                    subtitle: {
+                        text: 'Source: R.A. Fisher'
+                    },
+                    xAxis: {
+                        title: {
+                            enabled: true,
+                            text: xLabel
+                        },
+                        startOnTick: true,
+                        endOnTick: true,
+                        showLastLabel: true
+                    },
+                    yAxis: {
+                        title: {
+                            text: yLabel
+                        }
+                    },
+                    legend: {
+                        layout: 'vertical',
+                        align: 'left',
+                        verticalAlign: 'top',
+                        x: 100,
+                        y: 70,
+                        floating: true,
+                        backgroundColor: (Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF',
+                        borderWidth: 1
+                    },
+                    plotOptions: {
+                        scatter: {
+                            marker: {
+                                radius: 5,
+                                states: {
+                                    hover: {
+                                        enabled: true,
+                                        lineColor: 'rgb(100,100,100)'
+                                    }
+                                }
+                            },
+                            states: {
+                                hover: {
+                                    marker: {
+                                        enabled: false
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                headerFormat: '<b>{series.name}</b><br>',
+                                pointFormat: '{point.x} cm vs {point.y} cm'
+                            }
+                        }
+                    },
+                    series: [{
+                        name: 'Iris Setosa',
+                        color: 'rgba(223, 83, 83, .5)',
+                        data: setosaData
+                    }, {
+                        name: 'Iris Versicolor',
+                        color: 'rgba(119, 152, 191, .5)',
+                        data: versicolorData
+                    }, {
+                        name: 'Iris Virginica',
+                        color: 'rgba(76, 220, 150, .5)',
+                        data: virginicaData
+                    }]
+                });
+            }
+        </script>
+    </body>
+</html>
