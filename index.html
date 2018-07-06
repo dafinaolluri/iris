@@ -8,10 +8,21 @@
 
         <script src="https://code.highcharts.com/highcharts.js"></script>
         <script src="https://code.highcharts.com/modules/exporting.js"></script>
+        <script src="https://code.highcharts.com/modules/parallel-coordinates.js"></script>
+
+        <style>
+        .highcharts-series-hover path {
+          stroke: rgb(255, 66, 66);
+          stroke-width: 2px;
+        }
+        </style>
     </head>
 
     <body>
-        <div id="container-sepal" style="min-width: 310px; height: 400px; max-width: 800px; margin: 0 auto;"></div>
+        <div id="container-parallel-coordinates" style="max-width: 800px; height: 400px;
+margin: 1em auto;"></div>
+
+        <div id="container-sepal" style="min-width: 310px; height: 400px; max-width: 800px; margin: 0 auto; padding-top: 100px;"></div>
 
         <div id="container-petal" style="min-width: 310px; height: 400px; max-width: 800px; margin: 0 auto; padding-top: 100px;"></div>
 
@@ -21,12 +32,19 @@
 
 
         <script>
+            // Fetch data and build scatter plots.
             $.ajax({
                type: "GET",  
                url: "iris.data",
                dataType: "text",       
-               success: function(response)  
+               success: function(responseData)  
                {
+                    formatDataAndBuildPlots(responseData);
+               }   
+            });
+
+            function formatDataAndBuildPlots(responseData){
+                    var dataJson = [];
 
                     var setosaSepal = [];
                     var setosaPetal = [];
@@ -44,9 +62,11 @@
                     var virginicaWidths = [];
 
 
-                    data = $.csv.toArrays(response);
+                    var data = $.csv.toArrays(responseData);
 
                     for(var i=0; i < data.length; i++){
+
+                        var classification = data[i][4];
 
                         var sepalLength = parseFloat(data[i][0]);
                         var sepalWidth = parseFloat(data[i][1]);
@@ -59,26 +79,49 @@
                         var lengthPair = [sepalLength, petalLength];
                         var widthPair = [sepalWidth, petalWidth];
 
-                        if(data[i][4] === "Iris-setosa"){
+
+                        if(classification === "Iris-setosa"){
+                            // Build data arrays for scatter plots.
                             setosaSepal.push(sepalPair);
                             setosaPetal.push(petalPair);
                             setosaLengths.push(lengthPair);
                             setosaWidths.push(widthPair);
 
-                        }else if(data[i][4] === "Iris-versicolor"){
+                            // Build data array for parallel coordinates chart.
+                            dataJson.push([
+                               sepalLength, sepalWidth, petalLength, petalWidth, 0
+                            ])
+
+                        }else if(classification === "Iris-versicolor"){
+                            // Build data arrays for scatter plots.
                             versicolorSepal.push(sepalPair);
                             versicolorPetal.push(petalPair);
                             versicolorLengths.push(lengthPair);
                             versicolorWidths.push(widthPair);
 
-                        }else if(data[i][4] === "Iris-virginica"){
+                            // Build data array for parallel coordinates chart.
+                            dataJson.push([
+                               sepalLength, sepalWidth, petalLength, petalWidth, 1
+                            ])
+
+                        }else if(classification === "Iris-virginica"){
+                            // Build data arrays for scatter plots.
                             virginicaSepal.push(sepalPair);
                             virginicaPetal.push(petalPair);
                             virginicaLengths.push(lengthPair);
                             virginicaWidths.push(widthPair); 
+
+                            // Build data array for parallel coordinates chart.
+                            dataJson.push([
+                               sepalLength, sepalWidth, petalLength, petalWidth, 2
+                            ])
                         }
                     }
 
+                    // Render parallel coordinates charts
+                    renderParallelCoordinatesChart(dataJson);
+
+                    // Render scatter plots
                     renderScatterPlot("Sepal Length Versus Sepal Width of 50 Iris Plants Set by Class",
                         "Sepal Length (cm)",
                         "Sepal Width (cm)",
@@ -100,8 +143,89 @@
                         "Sepal Width (cm)",
                         "Petal Width (cm)",
                         "container-widths", setosaWidths, versicolorWidths, virginicaWidths);
-               }   
-            });
+            }
+
+            function renderParallelCoordinatesChart(data){
+
+                Highcharts.chart('container-parallel-coordinates', {
+                    chart: {
+                      type: 'spline',
+                      parallelCoordinates: true,
+                      parallelAxes: {
+                        lineWidth: 2
+                      }
+                    },
+                    title: {
+                      text: 'Sepal and Petal Length Paths to Iris Plant Class'
+                    },
+                    plotOptions: {
+                      series: {
+                        animation: false,
+                        marker: {
+                          enabled: false,
+                          states: {
+                            hover: {
+                              enabled: false
+                            }
+                          }
+                        },
+                        states: {
+                          hover: {
+                            halo: {
+                              size: 0
+                            }
+                          }
+                        },
+                        events: {
+                          mouseOver: function () {
+                            this.group.toFront();
+                          }
+                        }
+                      }
+                    },
+                    tooltip: {
+                      pointFormat: '<span style="color:{point.color}">●</span>' +
+                        '{series.name}: <b>{point.formattedValue}</b><br/>'
+                    },
+                    xAxis: {
+                      categories: [
+                        'Sepal Length',
+                        'Sepal Width',
+                        'Petal Length',
+                        'Petal Width',
+                        'Class'
+                      ],
+                      offset: 10
+                    },
+                    yAxis: [{
+                      min: 0,
+                      tooltipValueFormat: '{value} cm'
+                    }, {
+                      min: 0,
+                      tooltipValueFormat: '{value} cm'
+                    }, {
+                      min: 0,
+                      tooltipValueFormat: '{value} cm'
+                    }, {
+                      min: 0,
+                      tooltipValueFormat: '{value} cm'
+                    }, {
+                      categories: [
+                        'Iris Setosa',
+                        'Iris Versicolor',
+                        'Iris Virginica'
+                      ]
+                    }],
+                    colors: ['rgba(11, 200, 200, 0.1)'],
+                    series: data.map(function (set, i) {
+                      return {
+                        name: 'Iris ' + i,
+                        data: set,
+                        shadow: false
+                      };
+                    })
+                });
+            }
 
             function renderScatterPlot(title, xLabel, yLabel, containerId, setosaData, versicolorData, virginicaData){
 
